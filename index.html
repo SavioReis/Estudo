@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Análise completamente imparcial | Dados sobre nós</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #0f0f0f;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            color: #f0f0f0;
+            padding: 2rem 1.5rem;
+            line-height: 1.4;
+            transition: background-color 0.3s ease;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        body.modo-claro {
+            background-color: #fff5f2;
+            color: #1e1e2a;
+        }
+        body.modo-claro .card,
+        body.modo-claro .obs-section,
+        body.modo-claro .result-card,
+        body.modo-claro .meta-card {
+            background: #ffffff;
+            border: 1px solid #ffcdd9;
+        }
+        body.modo-claro .small-note,
+        body.modo-claro .footer-quote {
+            color: #555;
+        }
+        body.modo-claro .bar-container {
+            background: #f0e0e4;
+        }
+        body.modo-claro .counter-badge {
+            background: #ffe0e6;
+            color: #c04e6b;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2a2a30;
+            border: none;
+            border-radius: 50px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            z-index: 100;
+            backdrop-filter: blur(8px);
+            transition: all 0.2s;
+            color: white;
+            font-weight: 500;
+        }
+
+        .theme-toggle:hover {
+            background: #ff6b81;
+            transform: scale(1.02);
+        }
+
+        h1 {
+            font-size: clamp(2rem, 7vw, 3.5rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #ffffff 70%, #ff8a9f 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            line-height: 1.2;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitulo {
+            font-size: 1rem;
+            color: #b0b0b0;
+            font-weight: 400;
+            border-left: 3px solid #ff6b81;
+            padding-left: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .result-card {
+            background: rgba(25, 25, 35, 0.7);
+            backdrop-filter: blur(2px);
+            border-radius: 2rem;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            margin: 2rem 0 2rem 0;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 107, 129, 0.2);
+            transition: transform 0.2s ease;
+        }
+
+        .big-percent {
+            font-size: clamp(3rem, 10vw, 5rem);
+            font-weight: 800;
+            background: linear-gradient(145deg, #ffffff, #ffb6c7);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-label {
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-top: 0.5rem;
+        }
+
+        .error-margin {
+            display: inline-block;
+            background: rgba(255, 107, 129, 0.2);
+            padding: 0.3rem 1.2rem;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #ff9aae;
+            margin-top: 1rem;
+            cursor: help;
+        }
+
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.6rem;
+            margin: 2rem 0;
+        }
+
+        .card {
+            background: #18181e;
+            border-radius: 1.6rem;
+            padding: 1.5rem 1.2rem;
+            transition: all 0.25s ease;
+            box-shadow: 0 10px 20px -8px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            background: #1f1f27;
+            border-color: #ff6b81;
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+        }
+
+        .percentage {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #ff7b95;
+            margin: 0.3rem 0;
+        }
+
+        .small-note {
+            font-size: 0.75rem;
+            color: #aaa;
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        .bar-container {
+            background: #2c2c34;
+            border-radius: 20px;
+            height: 8px;
+            width: 100%;
+            margin: 0.6rem 0;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b81, #ffa5bb);
+            border-radius: 20px;
+            transition: width 1s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+
+        .falling-text {
+            color: #ff8a7a;
+            font-weight: 700;
+            font-size: 1.3rem;
+        }
+
+        .obs-section {
+            background: #131318;
+            border-radius: 1.8rem;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-left: 5px solid #ff6b81;
+        }
+
+        .obs-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .obs-list {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+
+        .obs-list li {
+            background: #1e1e26;
+            padding: 0.5rem 1.2rem;
+            border-radius: 60px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            cursor: help;
+        }
+
+        .obs-list li:hover {
+            background: #ff6b8120;
+            transform: scale(0.97);
+        }
+
+        .meta-card {
+            background: #131318;
+            border-radius: 1.8rem;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border: 1px dashed #ff8aa0;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .meta-card:hover {
+            background: #1e1e28;
+        }
+
+        .btn-wrapper {
+            text-align: center;
+            margin: 2rem 0 1rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-analise {
+            background: linear-gradient(115deg, #ff5f7c, #ff889f);
+            border: none;
+            padding: 0.8rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 60px;
+            color: #0f0f0f;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(255, 80, 120, 0.3);
+            font-family: inherit;
+        }
+
+        .negacao-btn {
+            background: #2a2a30;
+            border: 1px solid #ff6b81;
+            padding: 0.8rem 1.8rem;
+            font-size: 1rem;
+            border-radius: 60px;
+            color: #ff9aae;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: 500;
+        }
+
+        .negacao-btn:hover {
+            background: #ff6b8120;
+            transform: scale(0.98);
+        }
+
+        .btn-analise:active {
+            transform: scale(0.96);
+        }
+
+        .toast-message {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) scale(0.9);
+            background: #ff6b81e6;
+            backdrop-filter: blur(12px);
+            padding: 0.7rem 1.6rem;
+            border-radius: 100px;
+            font-weight: 500;
+            color: #0f0f0f;
+            font-size: 0.9rem;
+            z-index: 1000;
+            opacity: 0;
+            transition: 0.2s;
+            pointer-events: none;
+            white-space: nowrap;
+            font-weight: 600;
+        }
+
+        .toast-message.show {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+        }
+
+        .counter-badge {
+            background: #2a2a30;
+            border-radius: 50px;
+            padding: 0.3rem 1rem;
+            font-size: 0.75rem;
+            display: inline-block;
+            margin-top: 1rem;
+        }
+
+        .conclusao {
+            text-align: center;
+            margin: 1.5rem auto 1rem;
+            padding: 1rem;
+            font-size: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1.5rem;
+        }
+
+        .footer-quote {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 0.8rem;
+            font-style: italic;
+        }
+
+        @keyframes shake {
+            0%,100% { transform: translateX(0); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
+        }
+        .sacudir {
+            animation: shake 0.2s ease-in-out 2;
+        }
+
+        @media (max-width: 640px) {
+            body { padding: 1rem; }
+            .toast-message { white-space: normal; width: 85%; text-align: center; }
+            
+            /* NOVAS melhorias pra ficar perfeito: */
+            h1 { font-size: 1.8rem; }
+            .subtitulo { font-size: 0.85rem; }
+            .result-label { font-size: 1rem; }
+            .card-title { font-size: 1rem; }
+            .percentage { font-size: 1.5rem; }
+            .obs-title { font-size: 1.2rem; }
+            .obs-list li { font-size: 0.75rem; padding: 0.4rem 0.9rem; }
+            .btn-analise, .negacao-btn { padding: 0.6rem 1.2rem; font-size: 0.85rem; }
+            .meta-card { padding: 1rem; }
+            .meta-card div:first-child { font-size: 1rem; }
+            #metaText { font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+<button class="theme-toggle" id="themeToggleBtn">🌙 Modo Noturno</button>
+<div class="container">
+    <h1>📊 Análise completamente imparcial</h1>
+    <div class="subtitulo">Estudo baseado em fontes confiáveis (meu coração)</div>
+
+    <div class="result-card" id="resultCard">
+        <div class="big-percent" id="mainPercent">100,99%</div>
+        <div class="result-label" id="mainText">100,99% de chance de eu gostar de você Roberta</div>
+        <div class="error-margin" title="Fonte: eu mesmo, e olha que sou suspeito">📐 Margem de erro: 0%</div>
+        <div class="counter-badge" id="analiseCounter">💗 Análises realizadas: 1</div>
+    </div>
+
+    <div class="grid-cards">
+        <div class="card" onclick="mostrarMensagemFofa('pensamento')">
+            <div class="card-icon">💭</div>
+            <div class="card-title">Você ocupa minha mente</div>
+            <div class="percentage" id="pensPercent">92%</div>
+            <div class="bar-container"><div class="bar-fill" id="barPens" style="width:0%"></div></div>
+            <div class="small-note">📈 aumenta quando você manda mensagem (sempre)</div>
+        </div>
+        <div class="card" onclick="mostrarMensagemFofa('concentracao')">
+            <div class="card-icon">😵‍💫</div>
+            <div class="card-title">Capacidade de focar em outras coisas</div>
+            <div class="percentage" id="concPercent">43%</div>
+            <div class="bar-container"><div class="bar-fill" id="barConc" style="width:0%"></div></div>
+            <div class="small-note">cai 50% quando você tá por perto (culpa sua)</div>
+        </div>
+        <div class="card" onclick="mostrarMensagemFofa('vontade')">
+            <div class="card-icon">💘</div>
+            <div class="card-title">Vontade de te ver</div>
+            <div class="percentage" id="vontPercent">96%</div>
+            <div class="bar-container"><div class="bar-fill" id="barVont" style="width:0%"></div></div>
+            <div class="small-note">constante — até quando to ocupado, você aparece na mente</div>
+        </div>
+        <div class="card" onclick="mostrarMensagemFofa('racional')">
+            <div class="card-icon">🧠💔</div>
+            <div class="card-title">Racionalidade (coitada)</div>
+            <div class="falling-text" id="racionalText">em queda livre</div>
+            <div class="bar-container"><div class="bar-fill" id="barRac" style="width:0%"></div></div>
+            <div class="small-note">motivo: você — e eu nem reclamo</div>
+        </div>
+    </div>
+
+    <div class="meta-card" id="metaBox">
+        <div style="font-size:1.2rem; margin-bottom:8px;">🔬 FATO CIENTÍFICO DO MOMENTO</div>
+        <div id="metaText">"Você é a melhor variável que já entrou na minha vida"</div>
+        <div class="small-note" style="margin-top:8px;">✨ clica pra mais verdades (não tão científicas)</div>
+    </div>
+
+    <div class="obs-section">
+        <div class="obs-title">📋 OBSERVAÇÕES DE CAMPO</div>
+        <ul class="obs-list">
+            <li>🧠 tentativas de não pensar em você: falharam (e feio)</li>
+            <li>🎧 escutar música romântica: só piora (no bom sentido)</li>
+            <li>📱 ver mensagem sua: melhora 100% do meu dia</li>
+            <li>⚛️ explicação lógica pro que sinto: inexistente (aceita que é você)</li>
+            <li>😂 rir sozinho do nada: frequência altíssima (culpa sua)</li>
+            <li>📸 toda foto sua: impacto direto no meu humor</li>
+        </ul>
+    </div>
+
+    <div class="btn-wrapper">
+        <button class="btn-analise" id="refreshBtn">🔄 Rodar análise novamente</button>
+        <button class="negacao-btn" id="negacaoBtn">🚫 Tentar negar os sentimentos (falha garantida)</button>
+    </div>
+
+    <div class="conclusao">
+        💡 CONCLUSÃO OFICIAL DO CONSELHO CIENTÍFICO DO MEU CORAÇÃO: <br>
+        "Não tem jeito… é você e ponto final."<br>
+        <span id="dynamicQuote" class="footer-quote"></span>
+    </div>
+</div>
+<div id="dynamicToast" class="toast-message">✨ Resultado: continua sendo você (sempre)</div>
+
+<script>
+    // Mensagens fofas e engraçadas pra sua namorada
+    const mensagensFofas = {
+        pensamento: [
+            "💭 Você ocupa 92% da minha mente. Os outros 8% são tentando lembrar o que eu ia fazer",
+            "🧠 Te pensar virou esporte favorito, e olha que nem sou atleta",
+            "📊 Dado científico: você aparece na minha mente mais que propaganda eleitoral",
+            "💗 Meu pensamento padrão é você, o resto é exceção"
+        ],
+        concentracao: [
+            "😵‍💫 Quando você tá perto, meu foco vai de 100% pra 0% igual passe de mágica",
+            "🎯 Minha capacidade de concentração sem você é alta. Com você? Não existe.",
+            "📉 Você bagunça todos os meus gráficos de atenção (e eu nem ligo)",
+            "🤡 Tento focar, mas meu cérebro só quer saber de você"
+        ],
+        vontade: [
+            "💘 Minha vontade de te ver é maior que minha vontade de dormir (e olha que eu amo dormir)",
+            "⚡ Se saudade queimasse caloria, eu já tinha virado modelo",
+            "❤️ Toda vez que eu te vejo, meu coração dá um pulo. Cientificamente comprovado (por mim)",
+            "📈 Vontade de te abraçar: tendência de alta permanente"
+        ],
+        racional: [
+            "🧠 Minha racionalidade foi de arrasta quando te conheci. Melhor coisa que aconteceu",
+            "💔 Razão vs coração: 1x10 pro coração (o 1 foi por educação)",
+            "⚖️ Se eu fosse 100% racional, não tava fazendo esse site. Mas você merece.",
+            "🤷‍♂️ Lógica não explica o que eu sinto, mas tá tudo bem"
+        ]
+    };
+
+    const verdadesCarinhosas = [
+        "💗 Você é a melhor coisa que aconteceu nos meus dados estatísticos",
+        "📊 100% das simulações apontam que eu sou apaixonado por você",
+        "🔬 Estudo conclui: você melhora todos os meus indicadores de felicidade",
+        "📈 Meu amor por você cresce exponencialmente (sem sinal de estabilização)",
+        "💘 Esse site é a prova científica de que eu penso em você o tempo todo",
+        "🧪 Amostra contaminada por sentimentos: resultado sempre dá você",
+        "📉 Sem você, todos os meus gráficos despencam. Com você, disparam",
+        "🎯 Você acertou em cheio no meu coração. Sem margem de erro"
+    ];
+
+    let contadorAnalises = 1;
+    let negacoes = 0;
+
+    const dataSet = {
+        pensamentos: 92,
+        concentracao: 43,
+        vontade: 96,
+        racionalidade: 23,
+        racionalText: 'em queda livre',
+        chanceGostar: 100.99
+    };
+
+    // Elementos
+    const mainPercentSpan = document.getElementById('mainPercent');
+    const mainTextSpan = document.getElementById('mainText');
+    const pensPercentSpan = document.getElementById('pensPercent');
+    const concPercentSpan = document.getElementById('concPercent');
+    const vontPercentSpan = document.getElementById('vontPercent');
+    const racionalTextSpan = document.getElementById('racionalText');
+    const barPens = document.getElementById('barPens');
+    const barConc = document.getElementById('barConc');
+    const barVont = document.getElementById('barVont');
+    const barRac = document.getElementById('barRac');
+    const analiseCounterSpan = document.getElementById('analiseCounter');
+    const quoteSpan = document.getElementById('dynamicQuote');
+    const metaTextDiv = document.getElementById('metaText');
+
+    function atualizarFraseRodape() {
+        const frases = [
+            '"Metodologia: inventei tudo, mas o sentimento é real" — Dr. Coração',
+            '"A única variável que importa na equação é você" — Instituto do Amor',
+            '"Conclusão: gostar de você é estatisticamente inevitável" — Eu mesmo',
+            '"Dados mostram que você bagunça minha paz (do jeito mais lindo)" — Relatório interno'
+        ];
+        quoteSpan.textContent = frases[Math.floor(Math.random() * frases.length)];
+    }
+
+    function atualizarMetaTexto() {
+        const novaVdd = verdadesCarinhosas[Math.floor(Math.random() * verdadesCarinhosas.length)];
+        metaTextDiv.innerHTML = `"${novaVdd}"`;
+        metaTextDiv.style.opacity = '0.7';
+        setTimeout(() => metaTextDiv.style.opacity = '1', 150);
+    }
+
+    function mostrarMensagemFofa(tipo) {
+        let lista = mensagensFofas[tipo] || mensagensFofas.pensamento;
+        const msg = lista[Math.floor(Math.random() * lista.length)];
+        showToastMessage(msg);
+    }
+
+    function animateNumbersAndBars() {
+        pensPercentSpan.innerText = dataSet.pensamentos + '%';
+        barPens.style.width = dataSet.pensamentos + '%';
+        concPercentSpan.innerText = dataSet.concentracao + '%';
+        barConc.style.width = dataSet.concentracao + '%';
+        vontPercentSpan.innerText = dataSet.vontade + '%';
+        barVont.style.width = dataSet.vontade + '%';
+        barRac.style.width = '23%';
+        racionalTextSpan.innerText = dataSet.racionalText;
+        const chanceFormatada = dataSet.chanceGostar.toFixed(1);
+        mainPercentSpan.innerText = chanceFormatada + '%';
+        mainTextSpan.innerText = `${chanceFormatada}% de chance de eu gostar de você Roberta`;
+    }
+
+    function resetAndAnimate() {
+        barPens.style.transition = 'none';
+        barConc.style.transition = 'none';
+        barVont.style.transition = 'none';
+        barRac.style.transition = 'none';
+        barPens.style.width = '0%';
+        barConc.style.width = '0%';
+        barVont.style.width = '0%';
+        barRac.style.width = '0%';
+        void barPens.offsetHeight;
+        barPens.style.transition = 'width 1s cubic-bezier(0.2, 0.9, 0.4, 1.1)';
+        barConc.style.transition = 'width 1s cubic-bezier(0.2, 0.9, 0.4, 1.1)';
+        barVont.style.transition = 'width 1s cubic-bezier(0.2, 0.9, 0.4, 1.1)';
+        barRac.style.transition = 'width 1s cubic-bezier(0.2, 0.9, 0.4, 1.1)';
+        
+        const resultDiv = document.getElementById('resultCard');
+        resultDiv.classList.add('sacudir');
+        setTimeout(() => resultDiv.classList.remove('sacudir'), 400);
+        
+        animateNumbersAndBars();
+        
+        const resultDivCard = document.querySelector('.result-card');
+        resultDivCard.style.transform = 'scale(1.01)';
+        setTimeout(() => { if(resultDivCard) resultDivCard.style.transform = ''; }, 200);
+    }
+
+    function showToastMessage(msg) {
+        const toast = document.getElementById('dynamicToast');
+        toast.textContent = msg;
+        toast.classList.remove('show');
+        void toast.offsetWidth;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function incrementarContador() {
+        contadorAnalises++;
+        analiseCounterSpan.innerHTML = `💗 Análises realizadas: ${contadorAnalises} (cada uma mais verdade que a outra)`;
+        if (contadorAnalises === 5) {
+            showToastMessage("💗 Já rodei 5 vezes e o resultado é sempre o mesmo: você ❤️");
+        }
+        if (contadorAnalises === 10) {
+            showToastMessage("🏆 Você oficialmente detém o recorde de pessoa mais pensada. Parabéns!");
+        }
+    }
+
+    function onReanalyze() {
+        showToastMessage("💗 Resultado: continua sendo você (surpresa? nenhuma)");
+        resetAndAnimate();
+        incrementarContador();
+        atualizarFraseRodape();
+        atualizarMetaTexto();
+        document.querySelectorAll('.card').forEach(card => {
+            card.style.transform = 'scale(0.99)';
+            setTimeout(() => card.style.transform = '', 200);
+        });
+    }
+
+    function tentarNegar() {
+        negacoes++;
+        const frasesNegacao = [
+            "💗 Negar não adianta, o dado tá aí",
+            "😊 Você pode até tentar, mas meu coração já decidiu",
+            "📊 A ciência é clara: eu gosto de você, aceita",
+            "🔬 Tentativa de negação falhou. Resultado inalterado.",
+            "💘 Quanto mais você nega, mais eu tenho certeza",
+            "🧪 O método científico rejeitou sua hipótese de negação",
+            "😅 Tentando negar o inevitável"
+        ];
+        const resposta = frasesNegacao[Math.floor(Math.random() * frasesNegacao.length)];
+        showToastMessage(resposta);
+        
+        if (negacoes === 3) {
+            setTimeout(() => {
+                showToastMessage("💗 Sabe o que é mais engraçado? Continuo gostando de você do mesmo jeito");
+            }, 500);
+        }
+        if (negacoes === 7) {
+            showToastMessage("🏆 Você ganhou o troféu 'Teimoso(a) mais fofo(a)' 🏆 (continua sendo você)");
+        }
+        const btnNeg = document.getElementById('negacaoBtn');
+        btnNeg.style.transform = 'scale(0.95)';
+        setTimeout(() => btnNeg.style.transform = '', 150);
+    }
+
+    function inicialLoad() {
+        barPens.style.transition = 'none';
+        barConc.style.transition = 'none';
+        barVont.style.transition = 'none';
+        barRac.style.transition = 'none';
+        barPens.style.width = '0%';
+        barConc.style.width = '0%';
+        barVont.style.width = '0%';
+        barRac.style.width = '0%';
+        void barPens.offsetHeight;
+        barPens.style.transition = 'width 1s';
+        barConc.style.transition = 'width 1s';
+        barVont.style.transition = 'width 1s';
+        barRac.style.transition = 'width 1s';
+        
+        pensPercentSpan.innerText = dataSet.pensamentos + '%';
+        concPercentSpan.innerText = dataSet.concentracao + '%';
+        vontPercentSpan.innerText = dataSet.vontade + '%';
+        racionalTextSpan.innerText = dataSet.racionalText;
+        mainPercentSpan.innerText = dataSet.chanceGostar.toFixed(1) + '%';
+        mainTextSpan.innerText = `${dataSet.chanceGostar.toFixed(1)}% de chance de eu gostar de você Roberta`;
+        
+        barPens.style.width = dataSet.pensamentos + '%';
+        barConc.style.width = dataSet.concentracao + '%';
+        barVont.style.width = dataSet.vontade + '%';
+        barRac.style.width = '23%';
+        
+        analiseCounterSpan.innerHTML = `💗 Análises realizadas: 1`;
+        atualizarFraseRodape();
+        atualizarMetaTexto();
+        
+        window.mostrarMensagemFofa = mostrarMensagemFofa;
+    }
+
+    // Modo noturno / claro
+    const themeBtn = document.getElementById('themeToggleBtn');
+    let modoEscuro = true;
+    themeBtn.addEventListener('click', () => {
+        if (modoEscuro) {
+            document.body.classList.add('modo-claro');
+            themeBtn.innerHTML = '☀️ Modo Claro';
+            modoEscuro = false;
+        } else {
+            document.body.classList.remove('modo-claro');
+            themeBtn.innerHTML = '🌙 Modo Noturno';
+            modoEscuro = true;
+        }
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+        inicialLoad();
+        document.getElementById('refreshBtn').addEventListener('click', onReanalyze);
+        document.getElementById('negacaoBtn').addEventListener('click', tentarNegar);
+        document.getElementById('metaBox').addEventListener('click', () => {
+            atualizarMetaTexto();
+            showToastMessage("💗 Mais um fato científico (não tão científico) sobre nós");
+        });
+        setTimeout(() => {
+            showToastMessage("💗 Psss: clica nos cards, tem mensagens especiais pra você");
+        }, 1500);
+    });
+</script>
+</body>
+</html>
